@@ -42,6 +42,7 @@ std::vector<std::string> parse_at(std::string at_str) {
 }
 
 // joins a string vector range into a string
+// TODO improve this part by reserving the string space first?
 std::string join_str(std::vector<std::string> str_vec, int start_pos, int end_pos) {
     std::string joined_str = "";
     for (int idx=start_pos; idx<end_pos; ++idx) {
@@ -51,6 +52,7 @@ std::string join_str(std::vector<std::string> str_vec, int start_pos, int end_po
 }
 
 // joins a string vector with a separator
+// TODO improve this part by reserving the string space first?
 std::string join_str_sep(std::vector<std::string> str_vec, std::string sep) {
     std::string joined_str = "";
     for (int idx=0; idx<str_vec.size(); ++idx) {

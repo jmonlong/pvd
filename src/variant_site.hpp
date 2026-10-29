@@ -27,8 +27,12 @@ public:
     // compare ATs that are seen in at least one individual and identify boundary
     // reference nodes
     void find_breakpoints();
+
+    // check if this is a simple situation with nothing to do (simple SNP/indel)
+    bool is_simple();
     
     void write_out(std::map<size_t, node_t>& node_info);
+    void write_out_simple();
     
 protected:
     // save contig name and other info that we want to write out
@@ -36,6 +40,7 @@ protected:
     std::string qual;
     std::string filter;
     std::string id;
+    std::vector<std::string> first_vcf_rec;
     // save the reference AT
     std::string ref_at;
     // to save memory on huge snarls, assign an index to ATs and then work

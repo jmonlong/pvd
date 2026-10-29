@@ -7,6 +7,7 @@ Snarl::Snarl(std::vector<std::string> vcf_line, std::string info_ats) {
     qual = vcf_line[5];
     filter = vcf_line[6];
     id = vcf_line[2];
+    first_vcf_rec = vcf_line;
     // parse the ATs
     std::vector<std::string> orig_ats = split_str(info_ats, ',');
     ref_at = orig_ats[0];
@@ -61,7 +62,7 @@ void Snarl::add_sample(std::string samp_name, std::string gt) {
     if (samp_at_gts.find(samp_name) == samp_at_gts.end()) {
         samp_order.push_back(samp_name);
     } else {
-        // we have this sample, so we're combining a second VCF record
+        // we already have this sample, so we're combining a second VCF record
         // check if the old GT was ./. and if so replace it
         bool all_missing = true;
         for (int at_idx: samp_at_gts[samp_name]) {
@@ -365,4 +366,33 @@ void Snarl::write_out(std::map<size_t, node_t>& node_info) {
     for (auto [pos, vcf_out]: vcf_recs) {
         std::cout << vcf_out << std::endl;
     }
+}
+
+bool Snarl::is_simple() {
+    if (ats.size() > 2) {
+        return false;
+    }
+    if (ats.size() < 2) {
+        return true;
+    }
+    // two alleles but are they short enough?
+    for (auto [at_idx, atp]: ats) {
+        if (atp.size() > 3) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Snarl::write_out_simple() {
+    // prepare record
+    std::string info_at = ref_at;
+    if (id_to_at.size() > 1) {
+        info_at = ref_at + "," + id_to_at[1];
+    }
+    std::string info_val = "AT=" + info_at + ";PS=" + id;
+    first_vcf_rec[7] = info_val;
+    std::string out_vcf_rec = join_str_sep(first_vcf_rec, "\t");
+    
+    std::cout << out_vcf_rec << std::endl;
 }

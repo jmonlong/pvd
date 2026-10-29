@@ -97,6 +97,7 @@ int main(int argc, char* argv[]) {
     bool expand_buffer = false;
     auto start_timer = std::chrono::high_resolution_clock::now();
     auto end_timer = std::chrono::high_resolution_clock::now();
+    size_t n_was_simple = 0;
     while (true) {
         // read up to a whole buffer of character
         if (expand_buffer) {
@@ -164,7 +165,7 @@ int main(int argc, char* argv[]) {
                 buffer_str.erase(0, buffer_pos + 1);
                 continue;
             }
-
+            
             // if we're seeing a different variant ID,
             // it means we're getting a new snarl
             // std::cerr << line_v[2] << std::endl;
@@ -172,8 +173,16 @@ int main(int argc, char* argv[]) {
                 // TODO don't do anything if AT too short (all <=3)
                 // eventually write the current variant
                 if (!cur_id.empty()) {
-                    cur_snarl->find_breakpoints();
-                    cur_snarl->write_out(node_info);
+                    // check if SNP here?
+                    if (cur_snarl->is_simple()) {
+                        // easy, no need to look for breakpoints
+                        n_was_simple++;
+                        cur_snarl->write_out_simple();
+                    } else {
+                        // compare the traversals to look for breakpoints
+                        cur_snarl->find_breakpoints();
+                        cur_snarl->write_out(node_info);
+                    }
                     end_timer = std::chrono::high_resolution_clock::now();
                     auto duration = std::chrono::duration<double>(end_timer - start_timer).count();
                     if (duration > 10) {
@@ -226,6 +235,7 @@ int main(int argc, char* argv[]) {
 
     now = time(0);
     std::cerr << ctime(&now) << " - Done." << std::endl;
+    std::cerr << n_was_simple << " were simple snarls." << std::endl;
 
     return 0;
 }
