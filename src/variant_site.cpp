@@ -249,7 +249,6 @@ void Snarl::find_breakpoints() {
 }
 
 void Snarl::write_out(std::map<size_t, node_t>& node_info) {
-    // TODO don't change if not decomposition was needed, for example if only two original AT of length 3 (simple SNP case)
     // save the records to write in a list first that will be sorted by
     // position to make sure the output VCF is still sorted
     std::vector<std::pair<size_t, std::string>> vcf_recs;
@@ -290,15 +289,27 @@ void Snarl::write_out(std::map<size_t, node_t>& node_info) {
             if (alt_seq == "") {
                 add_padding = true;
             }
-            alt_seqs.push_back(alt_seq);
-            // remember which AT correspond to that allele index (for GT)
-            for (int orig_at_idx: alt_als) {
-                alt_at_o[orig_at_idx] = alt_ii;
+            if (ref_seq == alt_seq) {
+                // remember which AT correspond to the reference allele (for GT later)
+                for (int orig_at_idx: alt_als) {
+                    alt_at_o[orig_at_idx] = 0;
+                }
+            } else {
+                alt_seqs.push_back(alt_seq);
+                // remember which AT correspond to that allele index (for GT)
+                for (int orig_at_idx: alt_als) {
+                    alt_at_o[orig_at_idx] = alt_ii;
+                }
+                // update the AT INFO field
+                info_at += "," + alt_at;
+                // increment ALT index
+                alt_ii++;
             }
-            // update the AT INFO field
-            info_at += "," + alt_at;
-            // increment ALT index
-            alt_ii++;
+        }
+        // if there are no alternate allele/path (e.g. missing or same as reference sequence)
+        // don't output because not informative
+        if (alt_seqs.empty()) {
+            continue;
         }
         // do we need a padding base?
         if (add_padding) {
@@ -369,13 +380,11 @@ void Snarl::write_out(std::map<size_t, node_t>& node_info) {
 }
 
 bool Snarl::is_simple() {
-    if (ats.size() > 2) {
+    // a simple variant has only two traversals
+    if (ats.size() != 2) {
         return false;
     }
-    if (ats.size() < 2) {
-        return true;
-    }
-    // two alleles but are they short enough?
+    // SNVs or simple indels should involve at most 3 nodes
     for (auto [at_idx, atp]: ats) {
         if (atp.size() > 3) {
             return false;

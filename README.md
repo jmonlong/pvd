@@ -9,6 +9,13 @@ That can happen when we combine calls made by `vg giraffe/call` across multiple 
 
 *Example and methods soon...*
 
+The decomposed variants are not snarls anymore. 
+They correspond to paths starting and ending on the same nodes from the reference paths, where the reference allele follows the reference path, and all other follow non-reference nodes.
+
+The output VCF contains an *AT* field informing the traversal of each allele of the "bubble". 
+There is also a *PS*, for parent snarl, to remember which top-level snarl was decomposed to make each variant.
+
+
 # Compile
 
 ```sh
