@@ -1,5 +1,14 @@
 # PVD - Pangenome VCF Decomposer
 
+Decompose a VCF derived from a pangenome into simpler, more canonical, variants (e.g. SNVs, simple insertions/deletions). 
+In contrast to vcfwave, there is no realignment of the REF/ALT sequences. 
+The pangenome alignment is used so that the output variants are still consistent with the pangenome and we keep the information of which nodes/path corresponds to each decomposed allele.
+It is very similar to the preprocessing script in Pangenie. 
+The main difference is that `pvd` will handle cases where the same snarl is split into two VCF records.
+That can happen when we combine calls made by `vg giraffe/call` across multiple samples (because positions might be different due to the inclusion of a padding base).
+
+*Example and methods soon...*
+
 # Compile
 
 ```sh
@@ -37,7 +46,7 @@ vg convert -t 1 -Hf -Q refPathPrefix --no-translation pg.gbz | awk '{if($1=="S")
 vg convert -t 1 -Hf -Q refPathPrefix --no-translation pg.gbz | awk '{if($1=="S"){E=1; print} else if(E){exit 0}}' | pigz -p 5 > pg.Sonly.gfa.gz
 ```
 
-> *SO:* tags are necessary to inform the position of the nodes on the reference path. Hence the `-Q refPathPrefix` in the `vg convert` command above.
+> *SO:* tags are necessary to inform the position of the nodes on the reference path. Hence the `-Q refPathPrefix` in the `vg convert` command above. Change `refPathPrefix` to the prefix of the paths of the desired reference (e.g. `CHM13`, see below)
 
 > `--no-translation` is to make sure that the nodes in the output GFA exactly match the GBZ, and that chopped nodes are not translated back (assuming that is what we want).
 
@@ -46,7 +55,7 @@ vg convert -t 1 -Hf -Q refPathPrefix --no-translation pg.gbz | awk '{if($1=="S")
 Could be a VCF made by `vg deconstruct`.
 Eventually `vcfbub` could also help remove huge top-level snarls.
 
-Input VCF could also be a `bcftool merge -m id` of single-sample VCF genotyped with `vg call`.
+Input VCF could also be a `bcftool merge -m id` of single-sample VCFs genotyped with `vg call`.
 A same snarl can be present in up to two lines (because of the padding base) but as long as they are next to each other, they will be combined properly during decomposition.
 
 # Usage
@@ -54,7 +63,6 @@ A same snarl can be present in up to two lines (because of the padding base) but
 ```sh
 pvd input.vcf.gz pg.gfa.gz > input.dec.vcf
 ```
-
 
 # Example for the HPRC v2.0 pangenome
 
@@ -74,6 +82,7 @@ pvd hprc-v2.0-mc-chm13.region.vcf.gz hprc-v2.0-mc-chm13.Sonly.gfa.gz | bgzip > h
 
 # Potential future plan
 
+- Make it faster?
 - Option to input a VG/PG/XG/GBZ graph instead of GFA
 - Add a biallelic output
 - Recursively apply the decomposition on non-reference nested traversals.
