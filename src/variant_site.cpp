@@ -394,13 +394,25 @@ bool Snarl::is_simple() {
 }
 
 void Snarl::write_out_simple() {
-    // prepare record
+    // prepare INFO
     std::string info_at = ref_at;
     if (id_to_at.size() > 1) {
         info_at = ref_at + "," + id_to_at[1];
     }
     std::string info_val = "AT=" + info_at + ";PS=" + id;
     first_vcf_rec[7] = info_val;
+
+    // remove non-GT fields
+    if (first_vcf_rec[8] != "GT") {
+        std::vector<std::string> fmt_fields = split_str(first_vcf_rec[8], ':');
+        size_t gt_idx = std::find(fmt_fields.begin(), fmt_fields.end(), "GT") - fmt_fields.begin();
+        first_vcf_rec[8] = "GT";
+        for (size_t ii=9; ii < first_vcf_rec.size(); ii++) {
+            std::vector<std::string> samp_fields = split_str(first_vcf_rec[ii], ':');
+            first_vcf_rec[ii] = samp_fields[gt_idx];
+        }
+    }
+    
     std::string out_vcf_rec = join_str_sep(first_vcf_rec, "\t");
     
     std::cout << out_vcf_rec << std::endl;
